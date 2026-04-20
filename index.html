@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architectural BIM Specialist | Portfolio</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        :root {
+            --primary-color: #000;
+            --sub-color: #666;
+            --bg-color: #f4f4f4; 
+            --line-color: #ddd;
+            --samoo-blue: #62748d;
+            --spacing: 8%;
+        }
+
+        /* 커스텀 커서를 위해 기본 커서 숨김 */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; } 
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--primary-color);
+            line-height: 1.6; word-break: keep-all; scroll-behavior: smooth;
+            letter-spacing: -0.02em;
+        }
+
+        /* [CUSTOM CURSOR] */
+        #cursor {
+            position: fixed; width: 10px; height: 10px; background: #000;
+            border-radius: 50%; pointer-events: none; z-index: 9999;
+            transition: transform 0.2s ease; transform: translate(-50%, -50%);
+        }
+        #cursor.hover { transform: translate(-50%, -50%) scale(6); background: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
+        #cursor.hover::after { content: "VIEW"; font-size: 2px; font-weight: 800; color: #000; }
+
+        /* [NAVBAR] */
+        header {
+            position: fixed; width: 100%; top: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 25px var(--spacing); z-index: 1000;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--line-color);
+        }
+        header h1 { font-size: 1.1rem; letter-spacing: 2px; font-weight: 800; text-transform: uppercase; }
+        nav { display: flex; align-items: center; }
+        .nav-item { position: relative; margin-left: 35px; }
+        .nav-item > a { text-decoration: none; color: #000; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; padding: 10px 0; cursor: none; }
+
+        /* [HERO SECTION] */
+        .hero {
+            height: 90vh; display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 var(--spacing);
+            position: relative; overflow: hidden;
+        }
+        .hero-text h2 { font-size: 5rem; font-weight: 200; letter-spacing: -3px; line-height: 1.1; }
+        .hero-slideshow { width: 50%; height: 550px; position: relative; overflow: hidden; border-radius: 4px; box-shadow: 30px 30px 60px rgba(0,0,0,0.1); }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s ease-in-out; object-fit: cover; }
+        .slide.active { opacity: 1; }
+
+        /* [PROJECT SECTION] */
+        section { padding: 120px var(--spacing); background: #fff; }
+        .section-header { margin-bottom: 80px; border-bottom: 3px solid #000; padding-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .section-header h3 { font-size: 2.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-download { padding: 14px 30px; border: 2px solid #000; text-decoration: none; color: #000; font-size: 0.8rem; font-weight: 800; transition: 0.3s; cursor: none; }
+        .btn-download:hover { background: #000; color: #fff; }
+
+        .project-list { display: flex; flex-direction: column; gap: 100px; }
+        .project-item { width: 100%; position: relative; overflow: hidden; }
+        .image-container { width: 100%; position: relative; background-color: #eee; overflow: hidden; border-radius: 2px; }
+        .image-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: 1.2s cubic-bezier(0.2, 1, 0.3, 1); }
+        .project-item:hover img { transform: scale(1.08); }
+        
+        .ratio-icn { padding-bottom: 56.28%; } 
+        .ratio-default { padding-bottom: 65.78%; } 
+
+        /* [MODAL ENHANCED] */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98); z-index: 2000; 
+            display: none; opacity: 0; transition: opacity 0.5s ease; overflow-y: auto;
+        }
+        .modal.active { display: block; opacity: 1; }
+        .modal-content { 
+            padding: 120px var(--spacing); max-width: 1400px; margin: 0 auto; 
+            transform: translateY(50px); transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+        
+        .close-btn { position: fixed; top: 40px; right: var(--spacing); font-size: 0.8rem; letter-spacing: 2px; cursor: none; z-index: 2100; font-weight: 800; border-bottom: 2px solid #000; }
+        .modal-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 80px; margin-top: 60px; }
+        .detail-img { width: 100%; border-radius: 2px; box-shadow: 0 30px 60px rgba(0,0,0,0.1); opacity: 0; transform: scale(0.95); transition: 0.8s 0.2s all ease; }
+        .modal.active .detail-img { opacity: 1; transform: scale(1); }
+
+        .detail-info { display: flex; flex-direction: column; gap: 40px; }
+        .info-block { opacity: 0; transform: translateY(20px); transition: 0.5s ease; }
+        .modal.active .info-block:nth-child(1) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+        .modal.active .info-block:nth-child(2) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+        .modal.active .info-block:nth-child(3) { transition-delay: 0.5s; opacity: 1; transform: translateY(0); }
+        .modal.active .info-block:nth-child(4) { transition-delay: 0.6s; opacity: 1; transform: translateY(0); }
+
+        .info-block h5 { font-size: 0.65rem; color: #999; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 12px; font-weight: 700; }
+        .info-block p { font-size: 1.1rem; font-weight: 600; color: #000; line-height: 1.4; border-left: 2px solid #eee; padding-left: 15px; }
+        .modal-title { font-size: 3.5rem; font-weight: 200; text-transform: uppercase; letter-spacing: -2px; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+
+        /* [FOOTER - ORIGINAL RESTORED] */
+        .custom-footer { background-color: #111; padding: 80px var(--spacing); color: #fff; }
+        .footer-top { display: flex; align-items: center; gap: 25px; margin-bottom: 40px; font-weight: 700; }
+        .footer-top a { color: #fff; text-decoration: none; opacity: 0.7; cursor: none; }
+        .footer-top a:hover { opacity: 1; }
+        .divider { color: #444; padding: 0 5px; }
+        .info-row { display: flex; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; opacity: 0.8; }
+        .btn-advisory { background-color: var(--samoo-blue); color: #fff !important; padding: 10px 22px; text-decoration: none; font-size: 0.8rem; font-weight: 700; cursor: none; }
+        .footer-bottom p { opacity: 0.4; margin-top: 20px; font-size: 0.75rem; }
+
+        @media (max-width: 1024px) {
+            .hero { flex-direction: column; height: auto; padding: 180px var(--spacing) 100px; text-align: center; }
+            .hero-text, .hero-slideshow { width: 100%; }
+            .hero-slideshow { height: 400px; margin-top: 60px; }
+            .hero-text h2 { font-size: 3.5rem; }
+            .modal-grid { grid-template-columns: 1fr; }
+            .modal-title { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+
+    <header>
+        <h1>Architectural BIM Specialist</h1>
+        <nav>
+            <div class="nav-item"><a href="#projects">PROJECTS</a></div>
+            <div class="nav-item"><a href="#contact">CONTACT</a></div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h2>Digital Intelligence,<br>Architectural Excellence.</h2>
+        </div>
+        <div class="hero-slideshow" id="slideshow">
+            <img src="./images/ceremony.jpg" class="slide active">
+            <img src="./images/church.jpg" class="slide">
+            <img src="./images/apartment.jpg" class="slide">
+        </div>
+    </section>
+
+    <section id="projects">
+        <div class="section-header">
+            <h3>Selected Works</h3>
+            <a href="유민재_포트폴리오_2.pdf" class="btn-download" target="_blank">DOWNLOAD PDF</a>
+        </div>
+        
+        <div class="project-list">
+            <div class="project-item" onclick="openModal('CEREMONY SPACE', './images/ceremony.jpg', 'Daebudo, Danwon-gu', 'CEREMONY', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER')">
+                <div class="image-container ratio-default"><img src="./images/ceremony.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Shalom Church', './images/church.jpg', 'Panun-ri, Jucheon-myeon, Yeongwol-gun, Gangwon-do', 'Religious Facility (Church)', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/church.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Seongnae-dong Multi-family Housing', './images/apartment.jpg', 'Seongnae-dong, Seoul', 'Multi-family Housing', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/apartment.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Multi-family Housing Competition', './images/housing.jpg', '789 Deokpung-dong, Hanam-si, Gyeonggi-do', 'Multi-family Housing', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/housing.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Multi-family Residential Building', './images/construction.jpg', '545-1 Sinwol-dong, Yangcheon-gu, Seoul', 'Multi-family Housing', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/construction.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Urban-Type Housing', './images/urban.jpg', '138-21 Haengdang-dong, Seongdong-gu, Seoul', 'Urban-Type Housing', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/urban.jpg"></div>
+            </div>
+
+            <div class="project-item" onclick="openModal('Officetel Building', './images/officetel.jpg', '336-2 Jamsil-dong, Songpa-gu, Seoul', 'Officetel (Office Use)', 'MODELING(EXTERIOR), FLOOR PLAN, ELEVATION', 'REVIT, SKETCH UP, CAD, PHOTOSHOP, ILLUSTRATION, D5 RENDER, ENSCAPE')">
+                <div class="image-container ratio-default"><img src="./images/officetel.jpg"></div>
+            </div>
+        </div>
+    </section>
+
+    <div id="projectModal" class="modal">
+        <span class="close-btn" onclick="closeModal()">CLOSE ✕</span>
+        <div class="modal-content">
+            <h4 id="m-title" class="modal-title"></h4>
+            <div class="modal-grid">
+                <img id="m-img" src="" class="detail-img">
+                <div class="detail-info">
+                    <div class="info-block"><h5>LOCATION</h5><p id="m-loc"></p></div>
+                    <div class="info-block"><h5>BUILDING USE</h5><p id="m-use"></p></div>
+                    <div class="info-block"><h5>ROLE</h5><p id="m-role"></p></div>
+                    <div class="info-block"><h5>TOOLS</h5><p id="m-tools"></p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="custom-footer" id="contact">
+        <div class="footer-top">
+            <span style="opacity:0.5">SNS</span>
+            <a href="https://instagram.com/sonorous__j" target="_blank">IG</a>
+            <span class="divider">|</span><span>Contact</span>
+            <span class="divider">|</span><span>Careers</span>
+            <span class="divider">|</span><span style="font-weight:800; color:#fff">Privacy Policy</span>
+        </div>
+        <div class="footer-bottom">
+            <div class="info-row">
+                <span>514, 106, Gukjegeumyung-ro, Yeongdeungpo-gu, Seoul. (07343) South Korea</span>
+                <span class="divider">|</span>
+                <span>Tel +82 – 10 – 9283 – 0587</span>
+                <a href="mailto:tnwo0720@naver.com" class="btn-advisory">Management Advisory Team →</a>
+            </div>
+            <p>COPYRIGHT©Samoo Architects & Engineers 2016. ALL RIGHTS RESERVED.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 커스텀 커서
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // 호버 효과 대상들
+        const hoverTargets = document.querySelectorAll('.project-item, .btn-download, a, .close-btn, .btn-advisory');
+        hoverTargets.forEach(target => {
+            target.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            target.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        // 슬라이드쇼
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        setInterval(() => {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, 3500);
+
+        // 모달 제어
+        function openModal(title, img, loc, use, role, tools) {
+            const modal = document.getElementById('projectModal');
+            document.getElementById('m-title').innerText = title;
+            document.getElementById('m-img').src = img;
+            document.getElementById('m-loc').innerText = loc;
+            document.getElementById('m-use').innerText = use;
+            document.getElementById('m-role').innerText = role;
+            document.getElementById('m-tools').innerText = tools;
+            
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('projectModal');
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; }, 500);
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
